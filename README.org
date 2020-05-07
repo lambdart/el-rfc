@@ -1,4 +1,3 @@
-#+TITLE: rfc-mode README
 #+AUTHOR: esac
 #+PROPERTY: header-args :tangle no
 
