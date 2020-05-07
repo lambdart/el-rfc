@@ -42,7 +42,7 @@
 
    #+BEGIN_SRC sh
 
-   cask install
+   $ cask install
 
    #+END_SRC
 
@@ -79,9 +79,9 @@
 
    #+BEGIN_SRC sh
 
-   cd ~/.emacs.d/rfc;
-   fetch https://www.rfc-editor.org/in-notes/tar/RFC-all.tar.gz
-   tar -zxvf RFC-all.tar.gz
+   $ cd ~/.emacs.d/rfc
+   $ fetch https://www.rfc-editor.org/in-notes/tar/RFC-all.tar.gz
+   $ tar -zxvf RFC-all.tar.gz
 
    #+END_SRC
 
