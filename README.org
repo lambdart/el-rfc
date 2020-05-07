@@ -110,7 +110,7 @@
 
 * Future
 
-  - Integrate with `request or async-copy-file package,
+  - Integrate with =request= or =async-copy-file= package,
     and a write functions to download (from a remote source)
     and decompress RFCs from archive.
 
