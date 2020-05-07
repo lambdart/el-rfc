@@ -3,8 +3,8 @@
 
 * Introduction
 
-  The rfc-mode Emacs major mode to search and reader
-  for RFC txt documents.
+  The rfc-mode Emacs major mode to search and read
+  RFC txt documents.
 
 * Motivation
 
