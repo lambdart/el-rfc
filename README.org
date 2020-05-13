@@ -69,7 +69,7 @@
 
    #+END_SRC
 
-** Download all RFC (Optional)
+** Download all RFCs files (Optional)
 
    Seep up the process of find and open RFCs text files by download
    then. Download RFC archive and decompress it at some
