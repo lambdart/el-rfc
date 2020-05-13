@@ -56,7 +56,7 @@
 
 ** Manually
 
-   Clone this repository to ~~/.emacs.d/site-lisp/rfc-mode~
+   Clone this repository to =~/.emacs.d/site-lisp/rfc-mode=
    Add the following to your ~init.el~:
 
    #+BEGIN_SRC emacs-lisp
