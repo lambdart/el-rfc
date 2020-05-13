@@ -38,7 +38,7 @@
 
    #+END_SRC
 
-   Install with cask:
+   Install command:
 
    #+BEGIN_SRC sh
 
@@ -56,8 +56,8 @@
 
 ** Manually
 
-   Clone this repository to ~/.emacs.d/site-lisp/async-copy-file.
-   Add the following to your .emacs/init.el:
+   Clone this repository to ~~/.emacs.d/site-lisp/rfc-mode~
+   Add the following to your ~init.el~:
 
    #+BEGIN_SRC emacs-lisp
 
