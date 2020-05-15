@@ -3,20 +3,21 @@
 
 * Introduction
 
-  The rfc-mode Emacs major mode to search and read
-  RFC txt documents.
+  The rfc-docs is a Emacs major mode to browse/search/read
+  RFCs (text) documents.
 
 * Motivation
 
-  The original rfc-mode has as its dependencies the
-  =helm package= witch a lot of people (including me) don't
-  use, so this is just a simplification.
+  The original =rfc-mode= package has as dependency the
+  =helm= package witch a lot of people (including me) don't
+  use, so this is just a simplification using the builtin
+  functionalities (=completions, minibuffer=) provided by
+  =Vanilla Emacs=.
 
 * Screenshot
 
-
-  #+CAPTION: rfc-mode
-  #+NAME:   fig:rfc-mode completions box
+  #+CAPTION: rfc-docs
+  #+NAME:   fig:rfc-docs completions box
 
   [[./assets/completions.png]]
 
@@ -29,16 +30,16 @@
 * Installation
 ** Cask
 
-   Add =rfc-mode= git repository to the Cask file:
+   Add =rfc-docs= git repository to the Cask file:
 
    #+BEGIN_SRC emacs-lisp
 
-   (depends-on "rfc-mode"
-               :git "https://github.com/esac-io/rfc-mode")
+   (depends-on "rfc-docs"
+               :git "https://github.com/esac-io/rfc-docs")
 
    #+END_SRC
 
-   Install command:
+   And run cask Install command:
 
    #+BEGIN_SRC sh
 
@@ -46,36 +47,38 @@
 
    #+END_SRC
 
-   Add the following to your .emacs/init.el:
-
-   #+BEGIN_SRC emacs-lisp
-
-   (require 'rfc-mode)
-
-   #+END_SRC
-
 ** Manually
 
-   Clone this repository to =~/.emacs.d/site-lisp/rfc-mode=
-   Add the following to your ~init.el~:
+   Clone this repository to any arbitrary location, e.g:
+   =~/.emacs.d/site-lisp/rfc-docs=.
 
-   #+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC sh
 
-   ;; add to load path
-   (add-to-list 'load-path (expand-file-name "~/.emacs.d/site-lisp/rfc-mode"))
-
-   ;; require the feature
-   (require 'rfc-mode)
+   $ git clone https://github.com/esac-io/rfc-docs ~/.emacs.d/site-elisp/rfc-docs
 
    #+END_SRC
 
-** Download all RFCs files (Optional)
+* Configure
+** Enables
 
-   Seep up the process of find and open RFCs text files by download
-   then. Download RFC archive and decompress it at some
-   arbitrary folder, beware though, =`rfc-mode-directory= as
-   to point to this directory (default value: ~~/.emacs.d/rfc~),
-   e.g:
+   Add the following snippet of code to you Emacs initialization file
+   (usually ~init.el~).
+
+   #+BEGIN_SRC emacs-lisp
+
+   ;; require rfc-docs feature (load it)
+   (require 'rfc-docs nil t)
+
+   #+END_SRC
+
+   Note: For a more dynamic approach uses =load-file= or
+         =load-library= functions, i.e, =M-x load-library RET rfc-docs RET=.
+
+** Download RFCs (Optional)
+
+   Download RFC archive and decompress it at some
+   arbitrary folder, beware though, =`rfc-docs-directory'= as
+   to point to this directory, e.g:
 
    #+BEGIN_SRC sh
 
@@ -85,24 +88,26 @@
 
    #+END_SRC
 
-   If you prefer to download one file at time, just use =M-x
-   rfc-mode-browse= select RFC number candidate and it will be downloaded
-   and saved automatically at =`rfc-mode-directory=.
+   If you prefer to download one file at time, just use
+   =M-x rfc-docs-search= select RFC number candidate and it
+   will be downloaded and saved automatically at =`rfc-docs-directory'=.
+
+   Note:  =`rfc-docs-directory'= default value is =~/.emacs.d/rfc/=
 
 ** Customize
 
    Use emacs customize interface to see what options/values
-   are available =M-x customize-group RET rfc-mode=.
+   are available =M-x customize-group RET rfc-docs=.
 
 * Usage
 
-  Search for a RFC with the =M-x rfc-mode-browse= function,
-  after a RFC as selected a new buffer with its contents will
-  be created. Inside rfc-mode buffer use =<prior>= / =<next>=
-  binded to =rfc-mode-forward-page= / =rfc-mode-backward-page=
+  Search for a RFC with the =M-x rfc-docs-search= function,
+  after a RFC was selected a new buffer with its contents will
+  be created. Inside rfc-docs buffer use =<prior>= / =<next>=
+  binded to =rfc-docs-forward-page= / =rfc-docs-backward-page=
   to move around.
 
-  - Note: Default movement keybinds will work fine, but
+  - Note: Default movement keybinds will work just fine, but
     optionally =SPC= can be used to forward a page.
 
   - OBS: The buffer is read-only to avoid messing with
@@ -110,9 +115,13 @@
 
 * Future
 
-  - Integrate with =request= or =async-copy-file= package,
+  - Integrate with =request= or =async-copy-file=,
     and a write functions to download (from a remote source)
     and decompress RFCs from archive.
+
+* References
+
+  [[https://github.com/galdor/rfc-mode][rfc-mode]]
 
 * LICENSE
   MIT
