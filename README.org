@@ -3,16 +3,14 @@
 
 * Introduction
 
-  The rfc-docs is an Emacs major mode to browse/search/read
-  RFCs (text) documents.
+  The rfc-docs is an Emacs major mode to browse, search and read
+  [[https://en.wikipedia.org/wiki/Request_for_Comments][RFC]] documents.
 
 * Motivation
 
-  The original =rfc-mode= package has as dependency the
-  =helm= package witch a lot of people (including me) don't
-  use, so this is just a simplification using the builtin
-  functionalities (=completions, minibuffer=) provided by
-  =Vanilla Emacs=.
+  Simplify =rfc-mode= source code to use =vanilla Emacs=
+  functionalities (=completions=, =minibuffer=) and
+  remove =helm= dependency.
 
 * Screenshot
 
@@ -25,12 +23,16 @@
 
 * Dependencies
 
-  - Emacs >= 26.3 (tested on)
+  - seq
+
+* Tested on
+
+  - Emacs >= 26.3
 
 * Installation
 ** Cask
 
-   Add =rfc-docs= git repository to the Cask file:
+   Add to your Cask file:
 
    #+BEGIN_SRC emacs-lisp
 
@@ -39,18 +41,11 @@
 
    #+END_SRC
 
-   And run cask Install command:
-
-   #+BEGIN_SRC sh
-
-   $ cask install
-
-   #+END_SRC
+   Run =cask install= command.
 
 ** Manually
 
-   Clone this repository to any arbitrary location, e.g:
-   =~/.emacs.d/site-lisp/rfc-docs=.
+   Clone =rfc-docs= repository to a arbitrary location, e.g:
 
    #+BEGIN_SRC sh
 
@@ -58,27 +53,37 @@
 
    #+END_SRC
 
-* Configure
-** Enables
-
-   Add the following snippet of code to you Emacs initialization file
-   (usually ~init.el~).
+   Add =rfc-docs= directory to =load-path= on your emacs
+   initialization file (generally: ~/.emacs.d/init.el~) and
+   load it.
 
    #+BEGIN_SRC emacs-lisp
 
-   ;; require rfc-docs feature (load it)
+   ;; add to load-path
+   (add-to-list 'load-path "/replace/me/to/rfc-docs/path")
+
+   ;; load rfc-docs feature
    (require 'rfc-docs nil t)
 
    #+END_SRC
 
-   Note: For a more dynamic approach uses =load-file= or
-         =load-library= functions, i.e, =M-x load-library RET rfc-docs RET=.
+*** Note
 
-** Download RFCs (Optional)
+    For a more dynamic approach uses:
 
-   Download RFC archive and decompress it at some
-   arbitrary folder, beware though, =`rfc-docs-directory'= as
-   to point to this directory, e.g:
+    - =M-x load-file RET=
+    - =M-x load-library RET rfc-docs RET=
+
+* Download RFCs
+** Single
+
+   =M-x rfc-docs-search=, after enter the RFC number the text file
+   will be fetched and saved at =`rfc-docs-directory' location.
+
+** All
+
+   Download RFC archive and decompress it at =`rfc-docs-directory'=.
+
 
    #+BEGIN_SRC sh
 
@@ -88,40 +93,44 @@
 
    #+END_SRC
 
-   If you prefer to download one file at time, just use
-   =M-x rfc-docs-search= select RFC number candidate and it
-   will be downloaded and saved automatically at =`rfc-docs-directory'=.
+*** Note
 
-   Note:  =`rfc-docs-directory'= default value is =~/.emacs.d/rfc/=
+    =`rfc-docs-directory'= default values is =~/.emacs.d/rfc/=, you
+    can customize this variable value.
 
-** Customize
+* Customize
 
-   Use emacs customize interface to see what options/values
-   are available =M-x customize-group RET rfc-docs=.
+   =M-x customize-group RET rfc-docs=
 
 * Usage
 
   Search for a RFC with the =M-x rfc-docs-search= function,
   after a RFC was selected a new buffer with its contents will
-  be created. Inside rfc-docs buffer use =<prior>= / =<next>=
-  binded to =rfc-docs-forward-page= / =rfc-docs-backward-page=
-  to move around.
+  be created with its contents.
 
-  - Note: Default movement keybinds will work just fine, but
-    optionally =SPC= can be used to forward a page.
+  Inside =*rfc-<number>*= buffer use =<next>=/=<prior>= to
+  forward/backward a page, optionally =SPC= can be used
+  to forward a page.
 
-  - OBS: The buffer is read-only to avoid messing with
-    the original RFC content.
+** Note
+
+  - Default movement keybinds works as usual.
+
+** OBS
+
+   The buffer is read-only to avoid messing with
+   the original RFC content.
 
 * Future
 
   - Integrate with =request= or =async-copy-file=,
-    and a write functions to download (from a remote source)
-    and decompress RFCs from archive.
+    write functions to download RFC compressed archive
+    from a remote/arbitrary source and decompresses it.
 
 * References
 
-  [[https://github.com/galdor/rfc-mode][rfc-mode]]
+  1. [[https://en.wikipedia.org/wiki/Request_for_Comments][RFC]]
+  2. [[https://github.com/galdor/rfc-mode][rfc-mode]]
 
 * LICENSE
   MIT
