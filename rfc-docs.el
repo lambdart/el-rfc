@@ -81,7 +81,7 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
 (defvar rfc-docs-index-entries nil
   "The list of entries in the RFC index.")
 
-(defvar rfc-docs-map
+(defvar rfc-docs-keymap
   (let ((map (make-keymap)))
     (define-key map (kbd "q") 'rfc-docs-quit)
     (define-key map (kbd "SPC") 'rfc-docs-forward-page)
