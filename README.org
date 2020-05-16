@@ -3,7 +3,7 @@
 
 * Introduction
 
-  The rfc-docs is a Emacs major mode to browse/search/read
+  The rfc-docs is an Emacs major mode to browse/search/read
   RFCs (text) documents.
 
 * Motivation
