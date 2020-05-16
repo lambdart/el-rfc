@@ -1,6 +1,6 @@
-;;; rfc-mode.el Cask file
+;;; rfc-docs.el Cask file
 
-(package-file "rfc-mode.el")
+(package-file "rfc-docs.el")
 
 ;; Development
 (development
