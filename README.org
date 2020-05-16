@@ -45,7 +45,7 @@
 
 ** Manually
 
-   Clone =rfc-docs= repository to a arbitrary location, e.g:
+   Clone =rfc-docs= repository to a arbitrary location:
 
    #+BEGIN_SRC sh
 
@@ -53,9 +53,8 @@
 
    #+END_SRC
 
-   Add =rfc-docs= directory to =load-path= on your emacs
-   initialization file (generally: ~/.emacs.d/init.el~) and
-   load it.
+   Add =rfc-docs= directory to =load-path= in your Emacs
+   initialization file (~init.el~) and load it.
 
    #+BEGIN_SRC emacs-lisp
 
@@ -67,65 +66,63 @@
 
    #+END_SRC
 
-*** Note
-
-    For a more dynamic approach uses:
-
-    - =M-x load-file RET=
-    - =M-x load-library RET rfc-docs RET=
-
-* Download RFCs
-** Single
-
-   =M-x rfc-docs-search=, after enter the RFC number the text file
-   will be fetched and saved at =`rfc-docs-directory' location.
-
-** All
-
-   Download RFC archive and decompress it at =`rfc-docs-directory'=.
-
-
-   #+BEGIN_SRC sh
-
-   $ cd ~/.emacs.d/rfc
-   $ fetch https://www.rfc-editor.org/in-notes/tar/RFC-all.tar.gz
-   $ tar -zxvf RFC-all.tar.gz
-
-   #+END_SRC
-
-*** Note
-
-    =`rfc-docs-directory'= default values is =~/.emacs.d/rfc/=, you
-    can customize this variable value.
-
-* Customize
-
-   =M-x customize-group RET rfc-docs=
+   - Note: For a more dynamic approach uses:
+     - =M-x load-file RET=
+     - =M-x load-library RET rfc-docs RET=
 
 * Usage
 
-  Search for a RFC with the =M-x rfc-docs-search= function,
-  after a RFC was selected a new buffer with its contents will
-  be created with its contents.
+  Search for a =RFC= with the =M-x rfc-docs-search= function,
+  enter/select a =RFC number= in the minibuffer prompt, a new
+  buffer =*rfc<number>*= will be created with the =RFC number=
+  contents.
 
-  Inside =*rfc-<number>*= buffer use =<next>=/=<prior>= to
-  forward/backward a page, optionally =SPC= can be used
+  Inside =*rfc<number>*= buffer uses =<next>=, =<prior>= to
+  forward/backward a page, =SPC= also can be used
   to forward a page.
 
-** Note
+  - Note: Default movement keybinds works as usual.
+    The buffer is read-only to avoid messing with
+    the original RFC content.
 
-  - Default movement keybinds works as usual.
+* Binds
 
-** OBS
+  The table below describes =rfc-docs-keymap=:
 
-   The buffer is read-only to avoid messing with
-   the original RFC content.
+  | keybind | function               | description   |
+  | q       | rfc-docs-quit          | quit window   |
+  | SPC     | rfc-docs-forward-page  | forward page  |
+  | <next>  | rfc-docs-forward-page  | forward page  |
+  | <prior> | rfc-docs-backward-page | backward page |
+  Table 1.0 =rfc-docs-keymap=
+
+* Download RFCs
+
+  - Note: This is totally optional.
+
+  Download RFC archive and decompress it at =rfc-docs-directory=
+  pointer location.
+
+  #+BEGIN_SRC sh
+
+  $ cd ~/.emacs.d/rfc
+  $ fetch https://www.rfc-editor.org/in-notes/tar/RFC-all.tar.gz
+  $ tar -zxvf RFC-all.tar.gz
+
+  #+END_SRC
+
+  - Note: =rfc-docs-directory= default value: =~/.emacs.d/rfc/=
+
+* Customize
+
+  =M-x customize-group RET rfc-docs=
 
 * Future
 
-  - Integrate with =request= or =async-copy-file=,
-    write functions to download RFC compressed archive
-    from a remote/arbitrary source and decompresses it.
+  1. Integrate with =request= or =async-copy-file= packages, write
+     functions to download RFC compressed archive and to decompress
+     it.
+  2. Make index links to provide jumps.
 
 * References
 
