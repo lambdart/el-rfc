@@ -5,11 +5,20 @@
 EMACS = emacs -Q -q --batch
 
 # Remove command
-RM = rm -f
+RM = rm
 
-# Define Compile Command (CC)
+# Additional emacs load-path and autoload
+LOAD_PATH := -L .
+LOAD_AUTOLOAD := -l autoload
+
+# Define Compile Command (COMPILE)
 # Call batch-byte-compile function: -f
-CC := -f batch-byte-compile
+COMPILE := -f batch-byte-compile
+
+# AUTOLOAD related variables
+AUTOLOAD_UPDATE = -f batch-update-autoloads
+AUTOLOAD_FILE := "${PWD}/rfc-docs-autoloads.el"
+AUTOLOAD_EVAL := --eval '(setq generated-autoload-file ${AUTOLOAD_FILE})'
 
 # Expand the source code files
 EL != ls *.el
@@ -17,15 +26,19 @@ EL != ls *.el
 # Compiled files
 ELC := $(EL:.el=.elc)
 
-# transform lisp text (.el) files in byte compiled (.elc) files
-$(ELC): $(EL)
-	${EMACS} ${CC} ${.ALLSRC}
-
 # Entry Point
-all: compile
+all: compile autoload
 
 # Compile needed files
 compile: $(ELC)
 
+# Translate pure Elisp (.el) to byte compile (.elc)
+$(ELC): $(EL)
+	${EMACS} ${LOAD_PATH} ${COMPILE} ${.ALLSRC}
+
+autoload:
+	${EMACS} ${LOAD_AUTOLOAD} ${AUTOLOAD_EVAL} ${AUTOLOAD_UPDATE}
+
+# Remove {}.elc files
 clean:
-	${RM} *.elc
+	${RM} ${ELC}
