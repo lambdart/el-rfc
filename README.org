@@ -1,4 +1,7 @@
+#+TITLE: Rfc-docs
 #+AUTHOR: esac
+#+EMAIL: esac-io@tutanota.com
+#+DESCRIPTION: An Emacs major mode to browse RFC documents
 #+PROPERTY: header-args :tangle no
 
 * Introduction
@@ -24,25 +27,14 @@
 * Dependencies
 
   - seq
+  - cl-macs
+  - text-mode
 
 * Tested on
 
   - Emacs >= 26.3
 
 * Installation
-** Cask
-
-   Add to your Cask file:
-
-   #+BEGIN_SRC emacs-lisp
-
-   (depends-on "rfc-docs"
-               :git "https://github.com/esac-io/rfc-docs")
-
-   #+END_SRC
-
-   Run =cask install= command.
-
 ** Manually
 
    Clone =rfc-docs= repository to a arbitrary location:
@@ -81,15 +73,15 @@
   forward/backward a page, =SPC= also can be used
   to forward a page.
 
-  - Note: Default movement keybinds works as usual.
-    The buffer is read-only to avoid messing with
+  - Default movement keybinds works as usual.
+  - The buffer is read-only to avoid messing with
     the original RFC content.
 
 * Binds
 
   The table below describes =rfc-docs-keymap=:
 
-  | keybind | function               | description   |
+  | key     | function               | description   |
   | q       | rfc-docs-quit          | quit window   |
   | SPC     | rfc-docs-forward-page  | forward page  |
   | <next>  | rfc-docs-forward-page  | forward page  |
