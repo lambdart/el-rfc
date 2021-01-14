@@ -37,11 +37,6 @@
 ;;
 ;;; Code:
 
-(require 'seq)
-
-(eval-when-compile
-  (require 'cl-macs))
-
 ;; GROUP DEFINITION
 
 (defgroup rfc-docs nil
@@ -61,23 +56,13 @@ Assume RFC documents."
   :type 'string
   :safe nil)
 
-(defcustom rfc-docs-entry-title-width 64
+(defcustom rfc-docs-title-width 32
   "The width of the column containing RFC titles in the browser."
   :type 'integer
   :safe t)
 
 (defcustom rfc-docs-index-file "rfc-index.txt"
   "RFC index file name."
-  :type 'string
-  :safe t)
-
-(defcustom rfc-docs-file-format "rfc%s.txt"
-  "RFC file name format."
-  :type 'string
-  :safe t)
-
-(defcustom rfc-docs-buffer-name-format "*rfc%s*"
-  "RFC buffer name format."
   :type 'string
   :safe t)
 
@@ -93,12 +78,18 @@ Assume RFC documents."
 
 ;;; GLOBAL VARIABLES
 
-(defvar rfc-docs-entries-cache
-  (concat rfc-docs-dir "rfc-cache.txt")
-  "The entries cache file.")
+(defvar rfc-docs-file-fmt "rfc%s.txt"
+  "RFC file name format.")
 
-(defvar rfc-docs--entries '()
-  "The list of entries in the RFC index.")
+(defvar rfc-docs-buffer-name-fmt "*RFC-%s*"
+  "RFC buffer name format.")
+
+(defvar rfc-docs-cache-file
+  (concat rfc-docs-dir "rfc-cache.txt")
+  "Entries cache file.")
+
+(defvar rfc-docs-entries '()
+  "List of RFC entries.")
 
 ;;; MACROS
 
@@ -108,168 +99,127 @@ See `message' for more information about FMT and ARGS arguments."
   `(when rfc-docs-debug-message-flag
      (message (concat rfc-docs-prefix ,fmt) ,@args)))
 
-;;; INTERNAL FUNCTIONS
+;;; FETCH FUNCTIONS
 
-(defun rfc-docs--buffer-name (number)
-  "Return the buffer name for the RFC document NUMBER."
-  (format rfc-docs-buffer-name-format
-          (number-to-string number)))
-
-(defun rfc-docs--file-path (number)
-  "Return the absolute path of the RFC file NUMBER."
-  (expand-file-name (format rfc-docs-file-format number) rfc-docs-dir))
-
-(defun rfc-docs--ensure-dest-dir ()
-  "Create `rfc-docs-dir' if does not exists."
+(defun rfc-docs--dest-dir-p ()
+  "Try to create `rfc-docs-dir' if it not exists."
   (or (file-exists-p rfc-docs-dir)
       (and (y-or-n-p (format "Create directory %s? " rfc-docs-dir))
            (not (make-directory rfc-docs-dir t)))))
 
 ;; TODO: replace this by curl or fetch call using start-process
-(defun rfc-docs--fetch-file (number)
-  "Fetch (if necessary) RFC document using its NUMBER (string)."
-  (unless (rfc-docs--ensure-dest-dir)
-    (rfc-docs--message "Missing destination directory"))
-  ;; set file name and its destination path
-  (let* ((file-name (format rfc-docs-file-format number))
-         (file-path (expand-file-name file-name rfc-docs-dir)))
-    ;; unless file already exists, download it
+(defun rfc-docs--fetch-doc (index &optional dest)
+  "Fetch RFC INDEX document.
+If DEST is non-nil use it as the document
+directory destination."
+  (let* ((file-name (format rfc-docs-file-fmt index))
+         (file-path (expand-file-name file-name (or dest rfc-docs-dir))))
+    ;; unless file already exists, copy from the internet
     (or (file-exists-p file-path)
-        (let ((file-url (concat rfc-docs-archive-url file-name)))
-          (url-copy-file file-url file-path)))))
+        (url-copy-file (concat rfc-docs-archive-url file-name) file-path))
+    ;; return file full path
+    file-path))
 
-;; (defun rfc-docs--create-buffer (number)
-;;   " a buffer visiting the RFC document NUMBER.
-;; The buffer is created if it does not exist."
-;;   (let ((file-path (rfc-docs--file-path number))
-;;         (buffer-name (rfc-docs--buffer-name number)))
-;;     (if (not (rfc-docs--fetch-file number file-path))
-;;         (rfc-docs--message "Fetching the document fails")
-;;       (find-file file-path)
-;;       (rename-buffer buffer-name)
-;;       ;; not your responsibility
-;;       (read-only-mode 1)
-;;       (current-buffer))))
+(defvar rfc-docs-entry-regex
+  "\\(^[0-9]+\\) *\\(.*?\\)\\.\\(?: \\|$\\)"
+  "RFC regex related to the index file.")
 
-;; (defun rfc-docs--parse-index-entry (string)
-;;   "Parse the RFC document index entry STRING and return it as a plist."
-;;   (unless (string-match "\\(^[0-9]+\\) *\\(.*?\\)\\.\\(?: \\|$\\)" string)
-;;     (error "Invalid index entry format: %S" string))
-;;   (let* ((number-string (match-string 1 string))
-;;          (number (string-to-number number-string))
-;;          (title (match-string 2 string))
-;;          (entry nil))
-;;     (cond
-;;      ;; verify error
-;;      ((not number)
-;;       (error "Invalid index entry number: %S" number-string))
-;;      ;; default, set entry
-;;      (t (setq entry (list :number number :title title))))
-;;     entry))
+;;; ENTRIES FUNCTIONS
 
-;; (defun rfc-docs--parse-ref (string)
-;;   "Parse a reference to a RFC document from STRING.
-;; For example: \"RFC 2822\"."
-;;   (when (string-match "^RFC *\\([0-9]+\\)" string)
-;;     (string-to-number (match-string 1 string))))
+(defun rfc-docs--parse-entry (string)
+  "Parse entry STRING to the format `\"NUMBER TITLE\"."
+  (when (string-match rfc-docs-entry-regex string)
+    (let ((number (match-string 1 string))
+          (title  (match-string 2 string)))
+      (if (string= title "Not Issued") nil
+        (format "%s %s" number title)))))
 
-;; (defun rfc-docs--parse-refs (string)
-;;   "Parse a list of references to RFC documents from STRING.
-;; For example: \"RFC3401, RFC3402 ,RFC 3403\"."
-;;   (seq-remove #'null (mapcar #'rfc-docs--parse-ref
-;;                              (split-string string "," t " +"))))
+(defun rfc-docs--parse-entries ()
+  "Return a list of RFC index entries."
+  (with-temp-buffer
+    ;; insert file contents
+    (insert-file-contents
+     (expand-file-name rfc-docs-index-file
+                       rfc-docs-dir))
+    ;; go to the beginning of the buffer
+    (goto-char (point-min))
+    ;; get entries
+    (let ((entries '()))
+      (while (search-forward-regexp "^[0-9]+ " nil t)
+        (let ((start (match-beginning 0)))
+          (search-forward-regexp " $")
+          (let* ((end (match-beginning 0))
+                 (entry (rfc-docs--parse-entry
+                         (buffer-substring-no-properties start end))))
+            ;; save entry after parsing it
+            (and entry (push entry entries)))))
+      ;; return reversed entries
+      (nreverse entries))))
 
-;; (defun rfc-docs--parse-cadidate (entry)
-;;   "Parse ENTRY to candidate string that will be used latter."
-;;   (let* ((number (format "%s" (plist-get entry :number)))
-;;          (title (truncate-string-to-width
-;;                  (plist-get entry :title)
-;;                  rfc-docs-entry-title-width))
-;;          (candidate (format "%s|%s" number title)))
-;;     candidate))
+(defun rfc-docs--write-cache-file (entries)
+  "Cache RFC ENTRIES."
+  (with-temp-file rfc-docs-cache-file
+    ;; insert file contents in the file buffer (implicit)
+    (prin1 entries (current-buffer))))
 
-;; (defun rfc-docs-candidates ()
-;;   "Return parsed candidates (string list) from `rfc-docs-index-entries'."
-;;   (rfc-docs--fetch-file "-index" (rfc-docs-index-path))
-;;   (unless rfc-docs-index-entries
-;;     (setq rfc-docs-index-entries
-;;           (rfc-docs-read-index-file (rfc-docs-index-path))))
-;;   (if rfc-docs-index-entries
-;;       (let ((candidates (mapcar
-;;                          #'rfc-docs--parse-cadidate
-;;                          rfc-docs-index-entries)))
-;;         candidates)
-;;     nil))
+(defun rfc-docs--read-cache-file ()
+  "Return FILE contents."
+  (let ((file rfc-docs-cache-file))
+    (when (file-exists-p file)
+      (read (with-temp-buffer
+              (insert-file-contents file)
+              (buffer-substring-no-properties (point-min)
+                                              (point-max)))))))
 
-;; (defun rfc-docs-index-path ()
-;;   "Return he path of the file containing the index of all RFC documents."
-;;   (expand-file-name rfc-docs-index rfc-docs-dir ))
+(defun rfc-docs--set-entries ()
+  "Set RFC entries list (read/write from cache)."
+  (let ((cached-entries (rfc-docs--read-cache-file)))
+    ;; save it
+    (setq rfc-docs-entries
+          (or cached-entries
+              (rfc-docs--write-cache-file (rfc-docs--parse-entries))))
+    ;; return the entries
+    rfc-docs-entries))
 
-;; (defun rfc-docs-read-index (buffer)
-;;   "Read an RFC index file from BUFFER and return a list of entries."
-;;   (with-current-buffer buffer
-;;     (goto-char (point-min))
-;;     (let ((entries nil))
-;;       (while (search-forward-regexp "^[0-9]+ " nil t)
-;;         (let ((start (match-beginning 0)))
-;;           (search-forward-regexp " $")
-;;           (let* ((end (match-beginning 0))
-;;                  (lines (buffer-substring start end))
-;;                  (entry-string (replace-regexp-in-string "[ \n]+" " " lines))
-;;                  (entry (rfc-docs--parse-index-entry entry-string)))
-;;             (unless (string= (plist-get entry :title) "Not Issued")
-;;               (push entry entries)))))
-;;       (nreverse entries))))
+;;; BUFFER FUNCTIONS
 
-;; (defun rfc-docs-read-index-file (path)
-;;   "Read an RFC index file at PATH and return a list of entries."
-;;   (with-temp-buffer
-;;     (insert-file-contents path)
-;;     (rfc-docs-read-index (current-buffer))))
+(defun rfc-docs--create-buffer (index file)
+  "Create buffer using INDEX to determinate its name.
+Insert FILE contents to it."
+  (let ((buffer (get-buffer-create file)))
+    (and (bufferp buffer)
+         (with-current-buffer buffer
+           ;; insert file RFC file contents
+           (insert-file-contents file)
+           ;; made it read only
+           (setq buffer-read-only t)
+           ;; move cursor to the start of the file
+           (goto-char (point-min))
+           ;; rename buffer
+           (rename-buffer
+            (format rfc-docs-buffer-name-fmt index))
+           ;; return current buffer
+           (current-buffer)))))
 
-;; (defun rfc-docs-switch-to-buffer (number)
-;;   "Switch to RFC buffer: document NUMBER."
-;;   (let ((buffer (rfc-docs--create-buffer number)))
-;;     (if (not buffer)
-;;         (rfc--docs-message "Error, buffer does not exists")
-;;       (switch-to-buffer buffer))))
+(defun rfc-docs--display-buffer (index file)
+  "Display RFC INDEX/FILE buffer."
+  (display-buffer (rfc-docs--create-buffer index file)))
 
-;; ;;;###autoload
-;; (defun rfc-docs-reload-index ()
-;;   "Reload the RFC document index from its original file."
-;;   (interactive)
-;;   (setq rfc-docs-index-entries
-;;         (rfc-docs-read-index-file (rfc-docs-index-path))))
+;;; COMMAND INTERFACE
 
-;; ;;;###autoload
-;; (defun rfc-docs-find-file ()
-;;   "Browse through all RFC documents referenced in the index."
-;;   (interactive)
-;;   (let ((candidates (rfc-docs-candidates)))
-;;     (if (not candidates)
-;;         (rfc-docs--message "No candidates available")
-;;       (rfc-docs-switch-to-buffer
-;;        (string-to-number
-;;         (completing-read "RFC: " candidates nil t))))))
+(defun rfc-docs-read-index ()
+  "Read number string using the `minibuffer'completion system."
+  (completing-read "RFC: "
+                   (or rfc-docs-entries
+                       (rfc-docs--set-entries))
+                   nil t))
 
-;; ;;;###autoload
-;; (define-minor-mode rfc-docs
-;;   "Define a new minor mode `rfc-docs'.
-
-;; This defines the toggle command `rfc-docs' and (by default)
-;; a control variable `rfc-docs'.
-
-;; Interactively with no prefix argument, it toggles the mode.
-;; A prefix argument enables the mode if the argument is positive,
-;; and disables it otherwise."
-
-;;   :group rfc-docs
-;;   :lighter rfc-docs-minor-mode-string
-;;   (cond
-;;    (rfc-docs
-;;     ;; create docs directory (if necessary)
-;;     (rfc-docs--create-dir))
-;;    (t (setq rfc-docs nil))))
+(defun rfc-docs-find-file (index)
+  "Open or fetch RFC INDEX text document file."
+  ;; parse the necessary index argument
+  (interactive (list (car (split-string (rfc-docs-read-index)))))
+  ;; find file after the fetching process: from the internet or the disk
+  (rfc-docs--display-buffer index (rfc-docs--fetch-doc index)))
 
 (provide 'rfc-docs)
 
